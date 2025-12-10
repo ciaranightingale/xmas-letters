@@ -6,6 +6,7 @@ pub contract XmasLetterbox {
         macros::{functions::external, events::event},
         protocol_types::address::AztecAddress,
         messages::message_delivery::MessageDelivery,
+        event::event_emission::emit_event_in_private,
     };
 
     #[event]
@@ -15,8 +16,12 @@ pub contract XmasLetterbox {
 
     #[external("private")]
     fn send_letter(to: AztecAddress, message: Field) {
-        // Implementation for sending a letter
-        // 2. emit an event with the encrypted message
-        self.emit(XmasLetter { message }, to, MessageDelivery.UNCONSTRAINED_ONCHAIN);
+        // Emit an encrypted event with the message
+        emit_event_in_private(
+            XmasLetter { message },
+            &mut context,
+            to,
+            MessageDelivery.UNCONSTRAINED_ONCHAIN,
+        );
     }
 }

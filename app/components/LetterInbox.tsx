@@ -16,15 +16,15 @@ interface LetterInboxProps {
 export default function LetterInbox({ letters, isLoading }: LetterInboxProps) {
   if (isLoading) {
     return (
-      <div className="text-center py-20">
+      <div className="text-center py-24">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="inline-block text-6xl mb-4"
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          className="inline-block text-5xl mb-6 text-christmas-sage"
         >
-          🎄
+          ✦
         </motion.div>
-        <p className="text-xl text-christmas-snow">Loading your letters...</p>
+        <p className="text-lg text-christmas-sage font-sans">Retrieving messages...</p>
       </div>
     );
   }
@@ -32,43 +32,39 @@ export default function LetterInbox({ letters, isLoading }: LetterInboxProps) {
   if (letters.length === 0) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="text-center py-20 bg-white/10 backdrop-blur-md rounded-2xl p-12 border-2 border-dashed border-christmas-gold/50"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center py-24 bg-white/50 backdrop-blur-sm p-16 border border-christmas-sage/20"
       >
-        <div className="text-8xl mb-6">📪</div>
-        <h3 className="text-2xl font-bold text-christmas-gold mb-4">
-          No Letters Yet
+        <div className="text-6xl mb-6 text-christmas-sage/40">✉</div>
+        <h3 className="text-2xl font-light text-christmas-forest mb-3">
+          No Messages Yet
         </h3>
-        <p className="text-christmas-snow/80">
-          You haven&apos;t received any secret letters yet.
-          <br />
-          Share your address with friends to receive anonymous messages!
+        <p className="text-christmas-sage font-sans text-sm leading-relaxed max-w-md mx-auto">
+          Your inbox is empty. Share your address to receive<br />
+          private holiday greetings from friends.
         </p>
       </motion.div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-bold text-christmas-gold mb-2">
-          🎁 Your Secret Letters 🎁
-        </h2>
-        <p className="text-christmas-snow/80">
+    <div className="space-y-12">
+      <div className="text-center mb-10">
+        <p className="text-christmas-sage font-sans text-sm tracking-wide">
           {letters.length === 1
-            ? 'You have 1 secret letter'
-            : `You have ${letters.length} secret letters`}
+            ? 'You have 1 private message'
+            : `You have ${letters.length} private messages`}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
         {letters.map((letter, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: index * 0.15, ease: 'easeOut' }}
           >
             <Envelope message={letter.message} />
           </motion.div>

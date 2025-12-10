@@ -1,10 +1,9 @@
 import { describe, it, beforeAll, expect } from '@jest/globals';
-import type { PrivateEvent } from '@aztec/aztec.js/wallet';
 import { Fr } from '@aztec/aztec.js/fields';
 import { AztecAddress } from '@aztec/aztec.js/addresses';
 import { createAztecNodeClient, waitForNode } from '@aztec/aztec.js/node';
 import { createLogger } from '@aztec/aztec.js/log';
-import { TestWallet, registerInitialLocalNetworkAccountsInWallet } from '@aztec/test-wallet/server';
+import { TestWallet, registerInitialSandboxAccountsInWallet } from '@aztec/test-wallet/server';
 import { XmasLetterboxContract, type XmasLetter } from '../src/artifacts/XmasLetterbox.js';
 
 const NODE_URL = process.env.NODE_URL || 'http://localhost:8080';
@@ -26,9 +25,9 @@ describe('XmasLetterbox E2E Tests', () => {
     await waitForNode(node, logger);
     logger.info('Connected to Aztec node');
 
-    // Create wallet and register initial accounts
+    // Create wallet and register sandbox accounts
     wallet = await TestWallet.create(node);
-    accounts = await registerInitialLocalNetworkAccountsInWallet(wallet);
+    accounts = await registerInitialSandboxAccountsInWallet(wallet);
 
     alice = accounts[0];
     bob = accounts[1];
@@ -59,20 +58,18 @@ describe('XmasLetterbox E2E Tests', () => {
 
     // Bob's PXE scans for encrypted events addressed to him
     const events = await wallet.getPrivateEvents<XmasLetter>(
+      contract.address,
       XmasLetterboxContract.events.XmasLetter,
-      {
-        contractAddress: contract.address,
-        scopes: [bob],
-        fromBlock: tx.blockNumber,
-        toBlock: (tx.blockNumber as any) + 1,
-      }
+      tx.blockNumber as number,
+      1,
+      [bob]
     );
 
     // Verify Bob received the encrypted letter
     expect(events.length).toBeGreaterThan(0);
     const receivedEvent = events[0];
-    expect(receivedEvent.event.message).toEqual(secretMessage.toBigInt());
-    logger.info(`Bob successfully decrypted message: ${receivedEvent.event.message}`);
+    expect(receivedEvent.message).toEqual(secretMessage.toBigInt());
+    logger.info(`Bob successfully decrypted message: ${receivedEvent.message}`);
   }, TIMEOUT);
 
   it('should not allow Alice to decrypt messages sent to Bob', async () => {
@@ -86,13 +83,11 @@ describe('XmasLetterbox E2E Tests', () => {
 
     // Alice tries to read events but should not be able to decrypt them
     const aliceEvents = await wallet.getPrivateEvents<XmasLetter>(
+      contract.address,
       XmasLetterboxContract.events.XmasLetter,
-      {
-        contractAddress: contract.address,
-        scopes: [alice],
-        fromBlock: tx.blockNumber,
-        toBlock: (tx.blockNumber as any) + 1,
-      }
+      tx.blockNumber as number,
+      1,
+      [alice]
     );
 
     // Alice should not see the event since it was encrypted for Bob
@@ -114,22 +109,19 @@ describe('XmasLetterbox E2E Tests', () => {
     );
 
     const blockNumbers = txs.map((tx: any) => tx.blockNumber);
-    const firstBlock = Math.min(...blockNumbers) as any;
-    const lastBlock = (Math.max(...blockNumbers) as any) + 1;
+    const firstBlock = Math.min(...blockNumbers) as number;
 
-    // Bob retrieves all his letters
+    // Bob retrieves all his letters (limit of 10 to capture all 3)
     const events = await wallet.getPrivateEvents<XmasLetter>(
+      contract.address,
       XmasLetterboxContract.events.XmasLetter,
-      {
-        contractAddress: contract.address,
-        scopes: [bob],
-        fromBlock: firstBlock,
-        toBlock: lastBlock,
-      }
+      firstBlock,
+      10,
+      [bob]
     );
 
     expect(events.length).toBe(3);
-    const receivedMessages = events.map((e: PrivateEvent<XmasLetter>) => e.event.message);
+    const receivedMessages = events.map((e: XmasLetter) => e.message);
     messages.forEach(msg => {
       expect(receivedMessages).toContainEqual(msg.toBigInt());
     });

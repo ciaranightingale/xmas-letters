@@ -4,7 +4,7 @@
 /* eslint-disable */
 import { AztecAddress, CompleteAddress } from '@aztec/aztec.js/addresses';
 import { type AbiType, type AztecAddressLike, type ContractArtifact, EventSelector, decodeFromAbi, type EthAddressLike, type FieldLike, type FunctionSelectorLike, loadContractArtifact, loadContractArtifactForPublic, type NoirCompiledContract, type U128Like, type WrappedFieldLike } from '@aztec/aztec.js/abi';
-import { Contract, ContractBase, ContractFunctionInteraction, type ContractMethod, type ContractStorageLayout, DeployMethod } from '@aztec/aztec.js/contracts';
+import { Contract, ContractBase, ContractFunctionInteraction, type ContractInstanceWithAddress, type ContractMethod, type ContractStorageLayout, DeployMethod } from '@aztec/aztec.js/contracts';
 import { EthAddress } from '@aztec/aztec.js/addresses';
 import { Fr, Point } from '@aztec/aztec.js/fields';
 import { type PublicKey, PublicKeys } from '@aztec/aztec.js/keys';
@@ -24,10 +24,10 @@ export const XmasLetterboxContractArtifact = loadContractArtifact(XmasLetterboxC
 export class XmasLetterboxContract extends ContractBase {
   
   private constructor(
-    address: AztecAddress,
+    instance: ContractInstanceWithAddress,
     wallet: Wallet,
   ) {
-    super(address, XmasLetterboxContractArtifact, wallet);
+    super(instance, XmasLetterboxContractArtifact, wallet);
   }
   
 
@@ -36,13 +36,13 @@ export class XmasLetterboxContract extends ContractBase {
    * Creates a contract instance.
    * @param address - The deployed contract's address.
    * @param wallet - The wallet to use when interacting with the contract.
-   * @returns A new Contract instance.
+   * @returns A promise that resolves to a new Contract instance.
    */
-  public static at(
+  public static async at(
     address: AztecAddress,
     wallet: Wallet,
-  ): XmasLetterboxContract {
-    return Contract.at(address, XmasLetterboxContract.artifact, wallet) as XmasLetterboxContract;
+  ) {
+    return Contract.at(address, XmasLetterboxContract.artifact, wallet) as Promise<XmasLetterboxContract>;
   }
 
   
@@ -50,14 +50,14 @@ export class XmasLetterboxContract extends ContractBase {
    * Creates a tx to deploy a new instance of this contract.
    */
   public static deploy(wallet: Wallet, ) {
-    return new DeployMethod<XmasLetterboxContract>(PublicKeys.default(), wallet, XmasLetterboxContractArtifact, (instance, wallet) => XmasLetterboxContract.at(instance.address, wallet), Array.from(arguments).slice(1));
+    return new DeployMethod<XmasLetterboxContract>(PublicKeys.default(), wallet, XmasLetterboxContractArtifact, XmasLetterboxContract.at, Array.from(arguments).slice(1));
   }
 
   /**
    * Creates a tx to deploy a new instance of this contract using the specified public keys hash to derive the address.
    */
   public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, ) {
-    return new DeployMethod<XmasLetterboxContract>(publicKeys, wallet, XmasLetterboxContractArtifact, (instance, wallet) => XmasLetterboxContract.at(instance.address, wallet), Array.from(arguments).slice(2));
+    return new DeployMethod<XmasLetterboxContract>(publicKeys, wallet, XmasLetterboxContractArtifact, XmasLetterboxContract.at, Array.from(arguments).slice(2));
   }
 
   /**
@@ -71,7 +71,7 @@ export class XmasLetterboxContract extends ContractBase {
       opts.publicKeys ?? PublicKeys.default(),
       opts.wallet,
       XmasLetterboxContractArtifact,
-      (instance, wallet) => XmasLetterboxContract.at(instance.address, wallet),
+      XmasLetterboxContract.at,
       Array.from(arguments).slice(1),
       opts.method ?? 'constructor',
     );
