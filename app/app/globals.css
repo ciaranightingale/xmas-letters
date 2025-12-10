@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 min-h-screen text-white;
+  }
+}
+
+@layer utilities {
+  .snow {
+    position: fixed;
+    top: -10px;
+    z-index: 1;
+    animation: fall linear infinite;
+  }
+
+  @keyframes fall {
+    to {
+      transform: translateY(100vh);
+    }
+  }
+
+  .envelope-flip {
+    perspective: 1000px;
+  }
+
+  .envelope-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+  }
+
+  .envelope-flip.flipped .envelope-inner {
+    transform: rotateY(180deg);
+  }
+
+  .envelope-front,
+  .envelope-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+  }
+
+  .envelope-back {
+    transform: rotateY(180deg);
+  }
+}

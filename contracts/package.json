@@ -6,9 +6,9 @@
         "test": "NODE_NO_WARNINGS=1 node --experimental-vm-modules $(yarn bin jest) --no-cache --runInBand --config jest.config.json"
     },
     "devDependencies": {
-        "@aztec/accounts": "v3.0.0-nightly.20251209",
-        "@aztec/aztec.js": "v3.0.0-nightly.20251209",
-        "@aztec/test-wallet": "3.0.0-nightly.20251209",
+        "@aztec/accounts": "3.0.0-devnet.5",
+        "@aztec/aztec.js": "3.0.0-devnet.5",
+        "@aztec/test-wallet": "3.0.0-devnet.5",
         "@jest/globals": "^29.7.0",
         "@types/node": "^20.0.0",
         "jest": "^29.7.0",
