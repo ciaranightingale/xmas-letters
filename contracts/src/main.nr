@@ -3,7 +3,7 @@ use dep::aztec::macros::aztec;
 #[aztec]
 pub contract XmasLetterbox {
     use aztec::{
-        macros::{functions::external, events::event},
+        macros::{functions::{external, initializer}, events::event},
         protocol_types::address::AztecAddress,
         messages::message_delivery::MessageDelivery,
         event::event_emission::emit_event_in_private,
@@ -13,6 +13,10 @@ pub contract XmasLetterbox {
     struct XmasLetter {
         message: Field,
     }
+
+    #[external("public")]
+    #[initializer]
+    fn constructor() {}
 
     #[external("private")]
     fn send_letter(to: AztecAddress, message: Field) {

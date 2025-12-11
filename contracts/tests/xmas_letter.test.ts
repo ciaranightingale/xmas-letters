@@ -4,7 +4,7 @@ import { AztecAddress } from '@aztec/aztec.js/addresses';
 import { createAztecNodeClient, waitForNode } from '@aztec/aztec.js/node';
 import { createLogger } from '@aztec/aztec.js/log';
 import { TestWallet, registerInitialSandboxAccountsInWallet } from '@aztec/test-wallet/server';
-import { XmasLetterboxContract, type XmasLetter } from '../src/artifacts/XmasLetterbox.js';
+import { XmasLetterboxContract, type XmasLetter } from '../artifacts/XmasLetterbox.js';
 
 const NODE_URL = process.env.NODE_URL || 'http://localhost:8080';
 const TIMEOUT = 120_000;

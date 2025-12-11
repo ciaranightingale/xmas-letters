@@ -1,7 +1,6 @@
-import { AztecAddress } from '@aztec/aztec.js';
-import { Fr } from '@aztec/aztec.js';
-import { XmasLetterboxContract, type XmasLetter } from '@/artifacts/XmasLetterbox';
-import { getPXE, getDefaultAccount, type PrivateEvent } from './wallet';
+import { AztecAddress } from '@aztec/aztec.js/addresses';
+import { XmasLetterboxContract, type XmasLetter } from '../../contracts/artifacts/XmasLetterbox';
+import { getWallet, getDefaultAccount } from './wallet';
 import { fieldToString, stringToField } from './aztec';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '';
@@ -20,9 +19,9 @@ async function getContract(): Promise<XmasLetterboxContract> {
     throw new Error('Contract address not configured. Set NEXT_PUBLIC_CONTRACT_ADDRESS in .env.local');
   }
 
-  const pxe = await getPXE();
+  const wallet = await getWallet();
   const address = AztecAddress.fromString(CONTRACT_ADDRESS);
-  contractInstance = await XmasLetterboxContract.at(address, pxe);
+  contractInstance = await XmasLetterboxContract.at(address, wallet);
 
   return contractInstance;
 }
@@ -35,7 +34,6 @@ export async function sendLetter(
   message: string
 ): Promise<void> {
   const contract = await getContract();
-  const wallet = await getWallet();
   const sender = await getDefaultAccount();
 
   // Convert message to Field
@@ -60,19 +58,38 @@ export async function sendLetter(
  */
 export async function fetchLetters(): Promise<Array<{ message: string; blockNumber: number }>> {
   const contract = await getContract();
-  const pxe = await getPXE();
+  const wallet = await getWallet();
   const account = await getDefaultAccount();
 
-  // Get all private events for this account
-  const events = await pxe.getIncomingNotes({
-    owner: account,
-    contractAddress: contract.address,
-  });
+  try {
+    // Get the latest block to determine scan range
+    // For now, scan the last 1000 blocks
+    const fromBlock = 0;
+    const numBlocks = 1000;
 
-  // TODO: Parse events properly based on devnet.5 API
-  // For now, return empty array until we understand the new API
-  console.log('Fetched events:', events);
-  return [];
+    // Query encrypted events using the XmasLetter event metadata
+    const events = await wallet.getPrivateEvents<XmasLetter>(
+      contract.address,
+      XmasLetterboxContract.events.XmasLetter,
+      fromBlock,
+      numBlocks,
+      [account]
+    );
+
+    // Convert events to letter objects
+    const letters = events.map((event) => {
+      const message = fieldToString(event.message);
+      return {
+        message,
+        blockNumber: 0, // Block number not available in event object
+      };
+    });
+
+    return letters;
+  } catch (error) {
+    console.error('Failed to fetch letters:', error);
+    return [];
+  }
 }
 
 /**
@@ -80,12 +97,8 @@ export async function fetchLetters(): Promise<Array<{ message: string; blockNumb
  * Only needed for initial setup
  */
 export async function deployContract(): Promise<string> {
-  const pxe = await getPXE();
-  const deployer = await getDefaultAccount();
-
-  const contract = await XmasLetterboxContract.deploy(pxe)
-    .send({ from: deployer })
-    .deployed();
-
-  return contract.address.toString();
+  // Note: Contract deployment requires a wallet instance with account management
+  // This function is for reference only and won't work with the current browser PXE setup
+  // In production, contracts should be deployed using the CLI or a server-side wallet
+  throw new Error('Contract deployment not supported in browser. Please deploy using the Aztec CLI.');
 }

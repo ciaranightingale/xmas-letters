@@ -21,9 +21,26 @@ export function stringToField(message: string): Fr {
 
 /**
  * Convert a Field back to a string
+ * Accepts any FieldLike type
  */
-export function fieldToString(field: Fr | bigint): string {
-  const fieldValue = typeof field === 'bigint' ? new Fr(field) : field;
+export function fieldToString(field: any): string {
+  let fieldValue: Fr;
+
+  if (typeof field === 'bigint') {
+    fieldValue = new Fr(field);
+  } else if (typeof field === 'number') {
+    fieldValue = new Fr(BigInt(field));
+  } else if (typeof field === 'string') {
+    fieldValue = Fr.fromString(field);
+  } else if (Buffer.isBuffer(field)) {
+    fieldValue = Fr.fromBuffer(field);
+  } else if (field instanceof Uint8Array) {
+    fieldValue = Fr.fromBuffer(Buffer.from(field));
+  } else {
+    // Assume it's already an Fr
+    fieldValue = field;
+  }
+
   const buffer = fieldValue.toBuffer();
 
   // Remove padding (null bytes)
@@ -33,7 +50,7 @@ export function fieldToString(field: Fr | bigint): string {
   }
 
   const decoder = new TextDecoder();
-  return decoder.decode(buffer.slice(0, end));
+  return decoder.decode(buffer.subarray(0, end));
 }
 
 /**

@@ -1,33 +1,49 @@
-import { createPXEClient, waitForPXE } from '@aztec/aztec.js';
-import type { PXE } from '@aztec/aztec.js';
-import { AztecAddress } from '@aztec/aztec.js';
-import type { PrivateEvent } from '@aztec/aztec.js';
+import { type AztecNode, createAztecNodeClient } from '@aztec/aztec.js/node';
+import { TestWallet } from '@aztec/test-wallet/client/lazy';
+import type { Wallet } from '@aztec/aztec.js/wallet';
+import { AztecAddress } from '@aztec/aztec.js/addresses';
 
-const PXE_URL = process.env.NEXT_PUBLIC_AZTEC_NODE_URL || 'https://api.aztec.network/aztec-pxe/3.0.0-devnet.5';
+const NODE_URL = process.env.NEXT_PUBLIC_AZTEC_NODE_URL || 'https://api.aztec.network/aztec-node/3.0.0-devnet.5';
 
-let pxeInstance: PXE | null = null;
+let walletInstance: Wallet | null = null;
+let aztecNodeInstance: AztecNode | null = null;
 
 /**
- * Initialize and get the PXE client
+ * Initialize the Aztec Node client
  */
-export async function getPXE(): Promise<PXE> {
-  if (pxeInstance) {
-    return pxeInstance;
+async function getAztecNode(): Promise<AztecNode> {
+  if (aztecNodeInstance) {
+    return aztecNodeInstance;
   }
 
-  pxeInstance = createPXEClient(PXE_URL);
-  await waitForPXE(pxeInstance);
-
-  return pxeInstance;
+  aztecNodeInstance = createAztecNodeClient(NODE_URL);
+  return aztecNodeInstance;
 }
 
 /**
- * Get registered accounts from PXE
+ * Initialize and get the Wallet
+ * TestWallet internally creates a PXE with IndexedDB storage
+ */
+export async function getWallet(): Promise<Wallet> {
+  if (walletInstance) {
+    return walletInstance;
+  }
+
+  const aztecNode = await getAztecNode();
+
+  // TestWallet.create() internally creates a PXE with proper browser storage
+  walletInstance = await TestWallet.create(aztecNode);
+
+  return walletInstance;
+}
+
+/**
+ * Get registered accounts from the wallet
  */
 export async function getAccounts(): Promise<AztecAddress[]> {
-  const pxe = await getPXE();
-  const accounts = await pxe.getRegisteredAccounts();
-  return accounts.map(acc => acc.address);
+  const wallet = await getWallet();
+  const accounts = await wallet.getAccounts();
+  return accounts.map(acc => acc.item);
 }
 
 /**
@@ -36,20 +52,7 @@ export async function getAccounts(): Promise<AztecAddress[]> {
 export async function getDefaultAccount(): Promise<AztecAddress> {
   const accounts = await getAccounts();
   if (accounts.length === 0) {
-    throw new Error('No accounts registered. Please register an account with the PXE first.');
+    throw new Error('No accounts registered. Please register an account with the wallet first.');
   }
   return accounts[0];
 }
-
-/**
- * Register a new account with the PXE
- * This would be called when user connects their wallet
- */
-export async function registerAccount(secretKey: string, accountContract: any): Promise<AztecAddress> {
-  const pxe = await getPXE();
-  // TODO: Implement account registration
-  // This depends on how users connect (browser wallet, etc.)
-  throw new Error('Account registration not yet implemented');
-}
-
-export { type PrivateEvent };
